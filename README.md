@@ -13,3 +13,10 @@ Work in progress.
 
 `GET /targets`
 List of supported targets.
+
+## Daemon configuration
+
+Configuration file:
+```
+# target,{Stlink hla_serial},{/dev/ttyXXXX}
+```
