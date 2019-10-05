@@ -6,7 +6,11 @@ Webservice that executes STM32 Executables on real hardware (Nucleo Boards) and 
 
 Basically functional.
 
-Demo: `curl -v -F 'executable=@/home/user/modm/build/stm32f4_discovery/blink/release/blink.elf' http://localhost:5000/execute/stm32f407`
+### Demo
+
+First start the daemon: `./src/run.py`
+
+Then you can submit a file to be executed: `curl -v -F 'executable=@/home/user/modm/build/stm32f4_discovery/blink/release/blink.elf' http://localhost:5000/execute/stm32f407`
 
 ## HTTP URLs (Endpoints)
 
