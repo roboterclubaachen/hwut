@@ -1,5 +1,3 @@
-import os
-
 from flask import Flask
 
 from hwut_server.api import register as register_api
@@ -12,9 +10,9 @@ class HwutServer(Flask):
         super(HwutServer, self).__init__(name, *args, **kw)
 
         # Load default settings and from environment variable
-        #self.config.from_pyfile(config.DEFAULT_CONF_PATH)
+        # self.config.from_pyfile(config.DEFAULT_CONF_PATH)
         #
-        #if 'HWUT_CONFIG' in os.environ:
+        # if 'HWUT_CONFIG' in os.environ:
         #    self.config.from_pyfile(os.environ['HWUT_CONFIG'])
         #
         if config_file:

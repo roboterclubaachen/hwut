@@ -1,6 +1,4 @@
 import subprocess
-import time
-
 
 __title__ = 'HWUT'
 __summary__ = 'Hardware Unit Testing'

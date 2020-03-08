@@ -1,5 +1,6 @@
-from hwut_server.api.execute import mod as mod_execute
 from hwut_server.api.about import mod as mod_about
+from hwut_server.api.execute import mod as mod_execute
+
 
 def register(app):
     """

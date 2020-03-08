@@ -1,6 +1,6 @@
-from hwut_server.database import db
-
 from passlib.hash import sha512_crypt
+
+from hwut_server.database import db
 
 
 class Users(db.Model):
@@ -23,14 +23,14 @@ class Users(db.Model):
     def to_dict_short(self):
         return {
             'name': self.name,
-               }
+        }
 
     def to_dict_long(self):
         return {
             'name': self.name,
             'rights': self.rights,
             'enabled': self.enabled,
-               }
+        }
 
     def verify_password(self, password):
         return sha512_crypt.verify(password, self.password_hash)

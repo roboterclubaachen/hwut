@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify, request
+import os
 import subprocess
 import tempfile
-import os
+
+from flask import Blueprint, jsonify, request
 
 mod = Blueprint('execute', __name__, url_prefix='/execute')
 

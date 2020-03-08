@@ -1,4 +1,5 @@
 from functools import wraps
+
 from flask import request, jsonify, Response
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from werkzeug.exceptions import abort
@@ -44,6 +45,7 @@ def requires_authentication(f):
         if not auth or not check_authentication(auth.username, auth.password):
             return authenticate()
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -54,4 +56,5 @@ def requires_superuser(f):
         if not auth or not check_authentication(auth.username, auth.password, True):
             return authenticate()
         return f(*args, **kwargs)
+
     return decorated_function
