@@ -12,11 +12,11 @@ __email__ = 'raphael+hwut@rleh.de'
 __license__ = 'AGPLv3'
 
 try:
-    git_hash = subprocess.check_output(['git', 'describe', '--always'])
+    git_hash = subprocess.check_output(['git', 'describe', '--always']).decode('utf-8').strip()
 except:
     pass
 
 try:
-    git_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+    git_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('utf-8').strip()
 except:
     pass
