@@ -10,7 +10,7 @@ class Jobs(db.Model):
     created = db.Column(db.TIMESTAMP, nullable=False)
     uploaded = db.Column(db.TIMESTAMP, nullable=False)
     name = db.Column(db.Text)
-    executable_file = relationship("ExecutableFile", cascade="all,delete", backref="parent")
+    #executable_file = relationship("ExecutableFile", cascade="all,delete", backref="parent")
 
     def __init__(self, created, uploaded, name):
         # 'id' auto increment

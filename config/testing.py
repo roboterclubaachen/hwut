@@ -7,7 +7,7 @@ SQLALCHEMY_ECHO = True
 
 ADMINS = frozenset(['raphael+hwut@rleh.de'])
 
-SQLALCHEMY_DATABASE_URI = 'postgres://postgres:postgres@localhost/hwut_testing'
+SQLALCHEMY_DATABASE_URI = 'postgres://hwut_testing:hwut_testing@localhost/hwut_testing'
 DATABASE_CONNECT_OPTIONS = {}
 
 SQLALCHEMY_TRACK_MODIFICATIONS = True
