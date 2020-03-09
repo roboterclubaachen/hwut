@@ -12,7 +12,7 @@ __email__ = 'raphael+hwut@rleh.de'
 __license__ = 'AGPLv3'
 
 try:
-    git_hash = subprocess.check_output(['git', 'describe', '--always']).decode('utf-8').strip()
+    git_hash = subprocess.check_output(['git', 'describe', '--always', '--dirty']).decode('utf-8').strip()
 except:
     pass
 
