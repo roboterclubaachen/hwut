@@ -1,4 +1,5 @@
 from passlib.hash import sha512_crypt
+from sqlalchemy.orm import relationship
 
 from hwut_server.database import db
 
@@ -9,11 +10,12 @@ class Users(db.Model):
     password_hash = db.Column(db.Text, nullable=False)
     rights = db.Column(db.BigInteger, nullable=False)
     enabled = db.Column(db.Boolean, nullable=False)
+    runners = relationship("Runners")
+    jobs = relationship("Jobs")
 
-    def __init__(self, name, password, rights, enabled):
-        hash = sha512_crypt.encrypt(password)
+    def __init__(self, name, password, rights, enabled=True):
         self.name = name
-        self.password_hash = hash
+        self.password_hash = sha512_crypt.encrypt(password)
         self.rights = rights
         self.enabled = enabled
 

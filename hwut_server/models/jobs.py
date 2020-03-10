@@ -1,6 +1,12 @@
-from sqlalchemy.orm import relationship
+from enum import Enum
 
 from hwut_server.database import db
+
+
+class JobStatus(Enum):
+    WAITING = 10
+    RUNNING = 20
+    FINISHED = 30
 
 
 class Jobs(db.Model):
@@ -9,8 +15,12 @@ class Jobs(db.Model):
                    autoincrement=True)
     created = db.Column(db.TIMESTAMP, nullable=False)
     uploaded = db.Column(db.TIMESTAMP, nullable=False)
+    status = db.Column(db.Enum(JobStatus))
     name = db.Column(db.Text)
-    #executable_file = relationship("ExecutableFile", cascade="all,delete", backref="parent")
+    filename_executable = db.Column(db.Text, nullable=False)
+    filename_log = db.Column(db.Text)
+    filename_other = db.Column(db.Text)
+    owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
 
     def __init__(self, created, uploaded, name):
         # 'id' auto increment
