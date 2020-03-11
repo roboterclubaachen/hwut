@@ -1,5 +1,6 @@
 from hwut_server.decorators import check_authentication, authenticate
 
+FILE_STORAGE = './file_storage'
 
 def dict_list_extended_if_authentication(r, l):
     if r.args.get('extended') == '1':

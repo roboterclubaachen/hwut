@@ -7,39 +7,55 @@ class JobStatus(Enum):
     WAITING = 10
     RUNNING = 20
     FINISHED = 30
+    CANCELED = 40
 
 
 class Jobs(db.Model):
     __tablename__ = 'jobs'
     id = db.Column('id', db.BigInteger, db.Sequence('jobs_id_seq'), primary_key=True, index=True, unique=True,
                    autoincrement=True)
-    created = db.Column(db.TIMESTAMP, nullable=False)
-    uploaded = db.Column(db.TIMESTAMP, nullable=False)
-    status = db.Column(db.Enum(JobStatus))
-    name = db.Column(db.Text)
+    created = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.Enum(JobStatus), nullable=False)
+    comment = db.Column(db.Text)
+    duration_limit_seconds = db.Column(db.Integer, nullable=False)
     filename_executable = db.Column(db.Text, nullable=False)
     filename_log = db.Column(db.Text)
     filename_other = db.Column(db.Text)
     owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
+    board = db.Column(db.Text, db.ForeignKey('boards.name'))
+    microcontroller = db.Column(db.Text, db.ForeignKey('microcontrollers.name'), nullable=False)
 
-    def __init__(self, created, uploaded, name):
+    def __init__(self, created, status, duration_limit_seconds, filename_executable, owner, board, microcontroller):
         # 'id' auto increment
         self.created = created
-        self.uploaded = uploaded
-        self.name = name
+        self.status = status
+        self.duration_limit_seconds = duration_limit_seconds
+        self.filename_executable = filename_executable
+        self.owner = owner
+        self.board = board
+        self.microcontroller = microcontroller
 
     def __repr__(self):
         return '<job %i>' % self.id
 
-    def to_dict_short(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-        }
-
-    def to_dict_long(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created': self.created,
-        }
+    def to_dict(self, extended=True):
+        if extended:
+            return {
+                'id': self.id,
+                'created': self.created,
+                'status': self.status.name,
+                'comment': self.comment,
+                'duration_limit_seconds': self.duration_limit_seconds,
+                'filename_log': self.filename_log,
+                'filename_other': self.filename_other,
+                'owner': self.owner,
+                'board': self.board,
+                'microcontroller': self.microcontroller,
+            }
+        else:
+            return {
+                'id': self.id,
+                'created': self.created,
+                'status': self.status.name,
+                'owner': self.owner,
+            }

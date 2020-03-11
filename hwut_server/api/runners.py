@@ -3,7 +3,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from hwut_server.models import Boards, Microcontrollers
 from hwut_server.models.runners import Runners
-from hwut_server.decorators import requires_authentication, requires_superuser
+from hwut_server.decorators import requires_authentication, requires_superuser, check_authentication
 from hwut_server.utils import dict_list_extended_if_authentication
 from hwut_server.database import db
 
@@ -33,7 +33,10 @@ def runners_list(filter_type, filter1, filter2):
 def targets_boards_get(id):
     try:
         runner = Runners.query.filter(Runners.id == id).one()
-        if True:  # FIXME: if user is owner os superuser
+        auth = request.authorization
+        if auth and (
+                (check_authentication(auth.username, auth.password, superuser=True))
+                or (check_authentication(auth.username, auth.password) and auth.username == runner.owner)):
             return jsonify(runner.to_dict_long())
         else:
             return jsonify(runner.to_dict_short())
@@ -47,23 +50,15 @@ def runner_create():
     if (request.args.get('board') is None) or (request.args.get('microcontroller') is None):
         abort(400)
 
-    # FIXME: get user
     user = request.authorization.username
-
     try:
         board = Boards.query.filter(Boards.name == request.args.get('board')).one()
-    except MultipleResultsFound:
-        abort(500, 'board "{}" exists multiple time in database'.format(request.args.get('board')))
-        return
     except NoResultFound:
         abort(410, 'board "{}" does not exist'.format(request.args.get('board')))
         return
     try:
         microcontroller = Microcontrollers.query\
             .filter(Microcontrollers.name == request.args.get('microcontroller')).one()
-    except MultipleResultsFound:
-        abort(500, 'microcontroller exists multiple time in database')
-        return
     except NoResultFound:
         abort(410, 'microcontroller does not exist')
         return

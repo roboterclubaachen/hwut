@@ -8,6 +8,7 @@ class Boards(db.Model):
     name = db.Column(db.Text, primary_key=True, unique=True, nullable=False)
     manufacturer = db.Column(db.Text)
     runners = relationship("Runners")
+    jobs = relationship("Jobs")
 
     def __init__(self, name):
         self.name = name
@@ -33,6 +34,7 @@ class Microcontrollers(db.Model):
     name = db.Column(db.Text, primary_key=True, unique=True, nullable=False)
     manufacturer = db.Column(db.Text)
     runners = relationship("Runners")
+    jobs = relationship("Jobs")
 
     def __init__(self, name):
         self.name = name
