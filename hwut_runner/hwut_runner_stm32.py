@@ -16,13 +16,14 @@ FILE_STORAGE = './file_storage'
 class HwutRunnerStm32:
     def run_test(self):
         # Get test from server
-        r = requests.get(self.runner_base_url + '/get', auth=self.auth)
+        r = requests.get(self.runner_base_url + 'get', auth=self.auth)
         if r.status_code == 404:
-            # Currently no job available -> try again in 10 seconds
+            print('Currently no job available -> try again in 10 seconds')
             time.sleep(10)
             return True
         if r.status_code != 200:
             print('Error: unable to get job')
+            print('Error: ', r.text, ', ', r.content)
             return False
         json = r.json()
         if not ('id' in json and
@@ -44,6 +45,7 @@ class HwutRunnerStm32:
         r = requests.get(executable_location, auth=self.auth)
         if r.status_code != 200:
             print('Error: unable to get executable')
+            print('Error: ', r.text, ', ', r.content)
             return False
         executable_filename = secrets.token_urlsafe(32)
         with open(os.path.join(FILE_STORAGE, executable_filename), 'wb') as f:
@@ -52,7 +54,7 @@ class HwutRunnerStm32:
         print('starting job {}'.format(job_id))
 
         # confirm start
-        r = requests.post(self.runner_base_url + '/start', auth=self.auth)
+        r = requests.post(self.runner_base_url + 'start', auth=self.auth)
         if r.status_code != 204:
             # Report error
             print('Error: ', r.text, ', ', r.content)
@@ -60,10 +62,15 @@ class HwutRunnerStm32:
 
         start_time = datetime.datetime.now()
 
+        # Avoid error if this script crashed previously
+        if not self.serial_port.is_open:
+            self.serial_port.close()
+
         # Start serial output log capture
         self.serial_port.baudrate = baudrate
         self.serial_port.open()
-        if not self.serial_port.is_open():
+        print(self.serial_port)
+        if not self.serial_port.is_open:
             # FIXME: abort test, report error to server
             print('Error: unable to open serial device')
             return False
@@ -72,37 +79,42 @@ class HwutRunnerStm32:
         # Flash microcontroller
         # e.g. `openocd -f interface/stlink-v2-1.cfg -c "hla_serial 066BFF323637414257071840" -f target/stm32f4x.cfg \
         # -c "program nucleo-f411re.elf verify" -c "reset run" -c "shutdown"`
+
         openocd_stdout = subprocess.check_output([
             'openocd',
             '-f',
             'interface/{}.cfg'.format(self.programmer_type),
             '-c',
-            '"hla_serial {}'.format(self.programmer_id),
+            'hla_serial {}'.format(self.programmer_id),
             '-f',
             'target/{}.cfg'.format(self.openocd_target),
             '-c',
-            'program {} verify'.format(executable_filename),
+            'program {} verify'.format(os.path.join(FILE_STORAGE, executable_filename)),
             '-c',
             'reset run',
             '-c',
             'shutdown',
         ])
+        print(openocd_stdout)
         # FIXME: Output? Check return value? ...
 
         # Wait for timer to finish while reading serial data
-        serial_data = ''
+        serial_data = list()
         while (datetime.datetime.now() - start_time) < time_limit:
-            serial_data += self.serial_port.read_all()  # FIXME: There must be a better way...
+            serial_data.append(self.serial_port.read_all())
+
+        # Debug
+        print(b''.join(serial_data))
 
         # Upload logfile
-        r = requests.put(log_location, data=serial_data, auth=self.auth)
+        r = requests.put(log_location, data=b''.join(serial_data), auth=self.auth)
         if r.status_code != 204:
             # Report error
             print('Error: ', r.text, ', ', r.content)
             return False
 
         # mark job as finished
-        r = requests.post(self.runner_base_url + '/stop', auth=self.auth)
+        r = requests.post(self.runner_base_url + 'stop', auth=self.auth)
         if r.status_code != 204:
             # Report error
             print('Error: ', r.text, ', ', r.content)
@@ -110,6 +122,9 @@ class HwutRunnerStm32:
 
         # remove executable file
         os.remove(os.path.join(FILE_STORAGE, executable_filename))
+
+        # close serial device
+        self.serial_port.close()
 
         return True
 
@@ -145,9 +160,13 @@ class HwutRunnerStm32:
         while True:
             try:
                 self.run_test()
+            except KeyboardInterrupt:
+                break
             except:
                 print('Error running test')
                 print("Unexpected error:", sys.exc_info()[0])
+            # For debugging
+            #time.sleep(5)
 
 
 if __name__ == "__main__":

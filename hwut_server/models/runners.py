@@ -46,6 +46,8 @@ class Runners(db.Model):
                 'ping_counter': self.ping_counter,
                 'job_counter': self.job_counter,
                 'busy': self.busy,
+                'board': self.target_board,
+                'microcontroller': self.target_microcontroller,
             }
         else:
             return {

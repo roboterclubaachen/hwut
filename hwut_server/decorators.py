@@ -15,7 +15,7 @@ def check_authentication(username, password, superuser=False):
     :param superuser: additionally check if user is superuser
     """
     try:
-        user = Users.query.filter_by(name=username).one()
+        user = Users.query.filter(Users.name == username).one()
         if superuser:
             return user.verify_password(password) and user.is_superuser()
         else:
@@ -54,7 +54,7 @@ def requires_superuser(f):
 
 def check_runner_authentication(username, password):
     try:
-        runner = Runners.query.filter_by(id=username).one()
+        runner = Runners.query.filter(Runners.id == username).one()
         if runner.token == password and runner.enabled:
             return True
         else:

@@ -1,7 +1,7 @@
 import os
 from secrets import token_urlsafe
 
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, send_file, url_for
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -10,7 +10,7 @@ from hwut_server.decorators import requires_runner_authentication
 from hwut_server.models import Jobs, JobStatus, Runners
 from hwut_server.utils import FILE_STORAGE
 
-mod = Blueprint('runner_jobs', __name__)
+mod = Blueprint('runner_jobs', __name__, url_prefix='/runner_api')
 
 
 @mod.route('/get', methods=['GET'])
@@ -19,26 +19,23 @@ def job_get():
     """
     Get a new job
     """
-    runner = Runners.query.filter(id=request.authorization.username).one()
+    runner = Runners.query.filter(Runners.id == request.authorization.username).one()
 
     # check if a job is already queued for the runner
-    try:
-        job = Jobs.query.filter(and_(Jobs.runner == runner.id, Jobs.status == JobStatus.QUEUED)).one()
+    job = Jobs.query.filter(and_(Jobs.runner == runner.id, Jobs.status == JobStatus.QUEUED)).first()
     # Else queue a new job
-    except NoResultFound:
-        try:
-            filters = list()
-            filters.append(Jobs.status == JobStatus.WAITING)
-            filters.append(Jobs.microcontroller == runner.microcontroller)
-            filters.append(or_(Jobs.board == runner.board, Jobs.board == ''))
-            job = Jobs.query.filter(and_(*filters)).order_by(Jobs.created.desc()).first()
-        except NoResultFound:
+    if job is None:
+        #try:
+        filters = list()
+        filters.append(Jobs.status == JobStatus.WAITING)
+        filters.append(Jobs.microcontroller == runner.target_microcontroller)
+        filters.append(or_(Jobs.board == runner.target_board, Jobs.board == ''))
+        job = Jobs.query.filter(and_(*filters)).order_by(Jobs.created.desc()).first()
+        #except:
+        #    return abort(500)
+        if job is None:
             return '', 404
-        except:
-            return abort(500)
-
         runner.acquire()
-
         job.status = JobStatus.QUEUED
         job.runner = runner.id
 
@@ -47,9 +44,9 @@ def job_get():
 
     return jsonify({
         'id': job.id,
-        'executable_location': request.url_root + 'executable',
-        'log_location': request.url_root + 'log',
-        'other_location': request.url_root + 'other',
+        'executable_location': request.url_root[:-1] + url_for('runner_jobs.job_get_executable'),
+        'log_location': request.url_root[:-1] + url_for('runner_jobs.job_upload_log'),
+        'other_location': request.url_root[:-1] + url_for('runner_jobs.job_upload_other'),
         'time_limit': job.duration_limit_seconds,
         'baudrate': 115200,  # FIXME
     })
@@ -60,12 +57,14 @@ def job_get():
 def job_get_executable():
     runner_id = request.authorization.username
     try:
-        job = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.RUNNING)).one()
+        job = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.QUEUED)).one()
     except NoResultFound:
         return abort(400)
 
     if not job.filename_executable:
         return abort(409, 'executable file already exists')
+
+    return send_file(os.path.join('..', FILE_STORAGE, job.filename_executable))
 
 
 @mod.route('/start', methods=['POST'])
@@ -75,8 +74,15 @@ def job_start():
     Runner confirms job has stopped
     """
     runner_id = request.authorization.username
+
+    # mark any other job as finished
+    jobs = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.RUNNING)).all()
+    for job in jobs:
+        job.status = JobStatus.ERROR
+    db.session.commit()
+
     try:
-        job = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.RUNNING)).one()
+        job = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.QUEUED)).one()
         job.status = JobStatus.RUNNING
         db.session.commit()
         return '', 204
@@ -90,9 +96,9 @@ def job_stop():
     """
     Runner confirms job is about to start
     """
-    runner = Runners.query.filter(id=request.authorization.username).one()
+    runner = Runners.query.filter(Runners.id == request.authorization.username).one()
     try:
-        job = Jobs.query.filter(and_(Jobs.runner == runner.id, Jobs.status == JobStatus.QUEUED)).one()
+        job = Jobs.query.filter(and_(Jobs.runner == runner.id, Jobs.status == JobStatus.RUNNING)).one()
         if request.args.get('error') and request.args.get('error') == '1':
             job.status = JobStatus.ERROR
         else:

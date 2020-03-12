@@ -18,7 +18,7 @@ def submit():
 
     duration_limit_seconds = 60
     if request.args.get('duration_limit_seconds'):
-        duration_limit_seconds = request.args.get('duration_limit_seconds')
+        duration_limit_seconds = int(request.args.get('duration_limit_seconds'))
     if duration_limit_seconds > 300:
         return abort(413, 'maximum execution time is 300 seconds')
 
@@ -79,13 +79,15 @@ def get(id):
 @mod.route('/<int:id>', methods=['DELETE'])
 @requires_authentication
 def cancel(id):
-    job = Jobs.query.filter(Jobs.id == id).one()
+    job = Jobs.query.filter(Jobs.id == id).first()
+    if job is None:
+        return abort(404)
     auth = request.authorization
     if not auth:
         return abort(401)
     if (check_authentication(auth.username, auth.password, superuser=True)) or (
             check_authentication(auth.username, auth.password) and auth.username == job.owner):
-        if job.status == JobStatus.WAITING:
+        if job.status == JobStatus.WAITING or job.status == JobStatus.RUNNING:
             job.status = JobStatus.CANCELED
             db.session.commit()
             return jsonify(job.to_dict(True)), 204
