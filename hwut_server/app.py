@@ -1,11 +1,10 @@
 import os
-import config
 
 from flask import Flask
 
 from hwut_server.api import register as register_api
 from hwut_server.runner_api import register as register_runner_api
-
+from hwut_server.errorhandler import register as register_errorhandler
 
 class HwutServer(Flask):
     def __init__(self, name='hwut_server', config_file=None, *args, **kw):
@@ -24,6 +23,7 @@ class HwutServer(Flask):
 
         register_api(self)
         register_runner_api(self)
+        register_errorhandler(self)
 
     def add_sqlalchemy(self):
         """ Create and configure SQLAlchemy extension """
