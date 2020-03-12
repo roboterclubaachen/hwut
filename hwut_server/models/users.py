@@ -22,20 +22,23 @@ class Users(db.Model):
     def __repr__(self):
         return '<user %s>' % self.name
 
-    def to_dict_short(self):
-        return {
-            'name': self.name,
-        }
-
-    def to_dict_long(self):
-        return {
-            'name': self.name,
-            'rights': self.rights,
-            'enabled': self.enabled,
-        }
+    def to_dict(self, extended=False):
+        if extended:
+            return {
+                'name': self.name,
+                'rights': self.rights,
+                'enabled': self.enabled,
+            }
+        else:
+            return {
+                'name': self.name,
+            }
 
     def verify_password(self, password):
         return sha512_crypt.verify(password, self.password_hash)
 
     def is_superuser(self):
         return self.rights >= 100
+
+    def set_password(self, password):
+        self.password_hash = sha512_crypt.encrypt(password)

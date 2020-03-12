@@ -10,8 +10,9 @@ class Boards(db.Model):
     runners = relationship("Runners")
     jobs = relationship("Jobs")
 
-    def __init__(self, name):
+    def __init__(self, name, manufacturer=None):
         self.name = name
+        self.manufacturer = manufacturer
 
     def __repr__(self):
         return '<board %s>' % self.name
@@ -36,8 +37,9 @@ class Microcontrollers(db.Model):
     runners = relationship("Runners")
     jobs = relationship("Jobs")
 
-    def __init__(self, name):
+    def __init__(self, name, manufacturer=None):
         self.name = name
+        self.manufacturer = manufacturer
 
     def __repr__(self):
         return '<microcontroller %s>' % self.name

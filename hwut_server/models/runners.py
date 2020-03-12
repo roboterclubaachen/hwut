@@ -1,6 +1,8 @@
-from hwut_server.database import db
+from sqlalchemy.orm import relationship
 from secrets import token_urlsafe
 from datetime import datetime
+
+from hwut_server.database import db
 
 
 class Runners(db.Model):
@@ -17,6 +19,7 @@ class Runners(db.Model):
     owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
     target_board = db.Column(db.Text, db.ForeignKey('boards.name'), nullable=False)
     target_microcontroller = db.Column(db.Text, db.ForeignKey('microcontrollers.name'), nullable=False)
+    jobs = relationship("Jobs")
 
     def __init__(self, owner, board, microcontroller, enabled=True):
         self.token = token_urlsafe(32)
@@ -32,22 +35,22 @@ class Runners(db.Model):
     def __repr__(self):
         return '<runner %d>' % self.id
 
-    def to_dict_short(self):
-        return {
-            'id': self.id,
-        }
-
-    def to_dict_long(self):
-        return {
-            'id': self.id,
-            'token': self.token,
-            'created': self.created,
-            'enabled': self.enabled,
-            'last_seen': self.last_seen,
-            'ping_counter': self.ping_counter,
-            'job_counter': self.job_counter,
-            'busy': self.busy,
-        }
+    def to_dict(self, extended=False):
+        if extended:
+            return {
+                'id': self.id,
+                'token': self.token,
+                'created': self.created,
+                'enabled': self.enabled,
+                'last_seen': self.last_seen,
+                'ping_counter': self.ping_counter,
+                'job_counter': self.job_counter,
+                'busy': self.busy,
+            }
+        else:
+            return {
+                'id': self.id,
+            }
 
     def ping(self):
         self.ping_counter = Runners.ping_counter + 1

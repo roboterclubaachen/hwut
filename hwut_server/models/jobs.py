@@ -5,9 +5,11 @@ from hwut_server.database import db
 
 class JobStatus(Enum):
     WAITING = 10
+    QUEUED = 15
     RUNNING = 20
     FINISHED = 30
     CANCELED = 40
+    ERROR = 50
 
 
 class Jobs(db.Model):
@@ -24,6 +26,7 @@ class Jobs(db.Model):
     owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
     board = db.Column(db.Text, db.ForeignKey('boards.name'))
     microcontroller = db.Column(db.Text, db.ForeignKey('microcontrollers.name'), nullable=False)
+    runner = db.Column(db.BigInteger, db.ForeignKey('runners.id'))
 
     def __init__(self, created, status, duration_limit_seconds, filename_executable, owner, board, microcontroller):
         # 'id' auto increment
@@ -46,6 +49,7 @@ class Jobs(db.Model):
                 'status': self.status.name,
                 'comment': self.comment,
                 'duration_limit_seconds': self.duration_limit_seconds,
+                'filename_executable': self.filename_executable,
                 'filename_log': self.filename_log,
                 'filename_other': self.filename_other,
                 'owner': self.owner,
