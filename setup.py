@@ -23,5 +23,6 @@ setup(
         #'psycopg2',
         'requests',
         'flask_script',
+        'pyserial',
     ],
 )

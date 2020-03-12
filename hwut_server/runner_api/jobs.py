@@ -47,10 +47,25 @@ def job_get():
 
     return jsonify({
         'id': job.id,
-        'executable': request.url_root + 'executable/' + job.filename_executable,
-        'log_location': request.url_root + 'log/' + job.id,
-        'other_location': request.url_root + 'other/' + job.id,
+        'executable_location': request.url_root + 'executable',
+        'log_location': request.url_root + 'log',
+        'other_location': request.url_root + 'other',
+        'time_limit': job.duration_limit_seconds,
+        'baudrate': 115200,  # FIXME
     })
+
+
+@mod.route('/executable', methods=['GET'])
+@requires_runner_authentication
+def job_get_executable():
+    runner_id = request.authorization.username
+    try:
+        job = Jobs.query.filter(and_(Jobs.runner == runner_id, Jobs.status == JobStatus.RUNNING)).one()
+    except NoResultFound:
+        return abort(400)
+
+    if not job.filename_executable:
+        return abort(409, 'executable file already exists')
 
 
 @mod.route('/start', methods=['POST'])
