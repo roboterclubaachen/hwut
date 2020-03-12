@@ -1,11 +1,10 @@
 import os
 from secrets import token_urlsafe
-from flask import Blueprint, jsonify, request, redirect, abort
+from flask import Blueprint, jsonify, request, redirect, abort, send_file
 from datetime import datetime
 
 from hwut_server.decorators import requires_authentication, check_authentication
-from hwut_server.models.jobs import Jobs, JobStatus
-from hwut_server.models.targets import Microcontrollers, Boards
+from hwut_server.models import Boards, Jobs, JobStatus, Microcontrollers
 from hwut_server.database import db
 from hwut_server.utils import FILE_STORAGE
 
@@ -73,7 +72,7 @@ def get(id):
     job = Jobs.query.filter(Jobs.id == id).one()
     auth = request.authorization
     extended = (auth and ((check_authentication(auth.username, auth.password, superuser=True)) or (
-                check_authentication(auth.username, auth.password) and auth.username == job.owner)))
+            check_authentication(auth.username, auth.password) and auth.username == job.owner)))
     return jsonify(job.to_dict(extended))
 
 
@@ -82,9 +81,10 @@ def get(id):
 def cancel(id):
     job = Jobs.query.filter(Jobs.id == id).one()
     auth = request.authorization
-    if auth and (
-            (check_authentication(auth.username, auth.password, superuser=True))
-            or (check_authentication(auth.username, auth.password) and auth.username == job.owner)):
+    if not auth:
+        return abort(401)
+    if (check_authentication(auth.username, auth.password, superuser=True)) or (
+            check_authentication(auth.username, auth.password) and auth.username == job.owner):
         if job.status == JobStatus.WAITING:
             job.status = JobStatus.CANCELED
             db.session.commit()
@@ -92,7 +92,7 @@ def cancel(id):
         else:
             return abort(400, 'Unable to cancel job. Current job status: {}'.format(job.status.name))
     else:
-        return abort(401)
+        return abort(403)
 
 
 @mod.route('', methods=['GET'])

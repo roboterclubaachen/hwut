@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, request, abort, redirect
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from hwut_server.models.targets import Boards, Microcontrollers
+from hwut_server.models import Boards, Microcontrollers
 from hwut_server.decorators import requires_authentication, requires_superuser
-from hwut_server.utils import dict_list_extended_if_authentication
+from hwut_server.utils import extended_and_authorized
 from hwut_server.database import db
 
 mod = Blueprint('targets', __name__, url_prefix='/targets')
@@ -11,7 +11,8 @@ mod = Blueprint('targets', __name__, url_prefix='/targets')
 
 @mod.route('/boards', methods=['GET'])
 def targets_boards():
-    return jsonify(dict_list_extended_if_authentication(request, Boards.query.all()))
+    extended = extended_and_authorized(request)
+    return jsonify([b.to_dict(extended=extended) for b in Boards.query.all()])
 
 
 @mod.route('/boards/<string:board_name>', methods=['GET'])
@@ -53,7 +54,8 @@ def targets_boards_delete(board_name):
 
 @mod.route('/microcontrollers', methods=['GET'])
 def targets_microcontrollers():
-    return jsonify(dict_list_extended_if_authentication(request, Microcontrollers.query.all()))
+    extended = extended_and_authorized(request)
+    return jsonify([m.to_dict(extended=extended) for m in Microcontrollers.query.all()])
 
 
 @mod.route('/microcontrollers/<string:microcontroller_name>', methods=['GET'])

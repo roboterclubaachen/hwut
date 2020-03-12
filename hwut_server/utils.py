@@ -1,12 +1,18 @@
-from hwut_server.decorators import check_authentication, authenticate
+from werkzeug.exceptions import abort
+
+from hwut_server.decorators import check_authentication
 
 FILE_STORAGE = './file_storage'
 
-def dict_list_extended_if_authentication(r, l):
-    if r.args.get('extended') == '1':
-        if not r.authorization or \
-                not check_authentication(r.authorization.username, r.authorization.password):
-            return authenticate()
-        return [b.to_dict_long() for b in l]
+
+def extended_and_authorized(request):
+    if request.args.get('extended') == '1':
+        auth = request.authorization
+        if not auth:
+            return abort(401)
+        if check_authentication(auth.username, auth.password):
+            return True
+        else:
+            return abort(403)
     else:
-        return [b.to_dict_short() for b in l]
+        return False

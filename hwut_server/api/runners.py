@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify, request, abort, redirect
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
-from hwut_server.models import Boards, Microcontrollers
-from hwut_server.models.runners import Runners
+from hwut_server.models import Boards, Microcontrollers, Runners
 from hwut_server.decorators import requires_authentication, requires_superuser, check_authentication
-from hwut_server.utils import dict_list_extended_if_authentication
 from hwut_server.database import db
+from hwut_server.utils import extended_and_authorized
 
 mod = Blueprint('runners', __name__, url_prefix='/runners')
 
@@ -25,8 +24,10 @@ def runners_list(filter_type, filter1, filter2):
         runner_list = Runners.query.filter(Runners.target_microcontroller == filter1) \
             .filter(Runners.target_board == filter1).all()
     else:
-        abort(400)  # Bad request
-    return jsonify(dict_list_extended_if_authentication(request, runner_list))
+        abort(400)
+
+    extended = extended_and_authorized(request)
+    return jsonify([r.to_dict(extended=extended) for r in runner_list])
 
 
 @mod.route('/<int:id>', methods=['GET'])
@@ -37,9 +38,9 @@ def targets_boards_get(id):
         if auth and (
                 (check_authentication(auth.username, auth.password, superuser=True))
                 or (check_authentication(auth.username, auth.password) and auth.username == runner.owner)):
-            return jsonify(runner.to_dict_long())
+            return jsonify(runner.to_dict(extended=True))
         else:
-            return jsonify(runner.to_dict_short())
+            return jsonify(runner.to_dict())
     except:
         abort(404)
 
