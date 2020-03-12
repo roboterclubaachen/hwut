@@ -107,3 +107,47 @@ def list_jobs():
     if request.args.get('extended') and request.args.get('extended') == '1':
         extended = True
     return jsonify([job.to_dict(extended) for job in job_list])
+
+
+@mod.route('/<int:id>/is_finished', methods=['GET'])
+@requires_authentication
+def is_job_finished(id):
+    try:
+        auth = request.authorization
+        job = Jobs.query.filter(Jobs.id == id).one()
+        if job.owner == auth.username:
+            if job.status == JobStatus.FINISHED:
+                return '', 204
+            else:
+                return abort(404)
+        else:
+            return abort(403)
+    except:
+        return abort(400)
+
+
+@mod.route('/<int:id>/log', methods=['GET'])
+@requires_authentication
+def get_job_log(id):
+    try:
+        auth = request.authorization
+        job = Jobs.query.filter(Jobs.id == id).one()
+        if job.owner == auth.username:
+            if job.status == JobStatus.FINISHED and job.filename_log:
+                send_file(
+                    os.path.join(FILE_STORAGE, job.filename_log),
+                    mimetype='text/plain',
+                    attachment_filename='hwut_job_{}.log'.format(job.id)
+                )
+            else:
+                return abort(404)
+        else:
+            return abort(403)
+    except:
+        return abort(400)
+
+
+@mod.route('/<int:id>/other', methods=['GET'])
+@requires_authentication
+def get_job_other(id):
+    abort(501)
