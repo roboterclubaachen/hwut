@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, abort, redirect
+from flask import Blueprint, jsonify, request, abort, url_for, Response
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from hwut_server.models import Boards, Microcontrollers, Runners
@@ -58,7 +58,7 @@ def runner_create():
         abort(410, 'board "{}" does not exist'.format(request.args.get('board')))
         return
     try:
-        microcontroller = Microcontrollers.query\
+        microcontroller = Microcontrollers.query \
             .filter(Microcontrollers.name == request.args.get('microcontroller')).one()
     except NoResultFound:
         abort(410, 'microcontroller does not exist')
@@ -70,7 +70,12 @@ def runner_create():
     except:
         abort(500, 'unable to create runner')
         return
-    return redirect(mod.url_prefix + '/' + str(runner.id), 201)
+    runner_url = url_for('runners.targets_boards_get', id=runner.id)
+    return Response(
+        'Runner created. See {}\n'.format(runner_url),
+        201,
+        {'Location': runner_url}
+    )
 
 
 @mod.route('/<int:id>', methods=['DELETE'])
