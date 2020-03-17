@@ -24,11 +24,10 @@ class Jobs(db.Model):
     filename_log = db.Column(db.Text)
     filename_other = db.Column(db.Text)
     owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
-    board = db.Column(db.Text, db.ForeignKey('boards.name'))
-    microcontroller = db.Column(db.Text, db.ForeignKey('microcontrollers.name'), nullable=False)
+    board = db.Column(db.Text, db.ForeignKey('boards.name'), nullable=False)
     runner = db.Column(db.BigInteger, db.ForeignKey('runners.id'))
 
-    def __init__(self, created, status, duration_limit_seconds, filename_executable, owner, board, microcontroller):
+    def __init__(self, created, status, duration_limit_seconds, filename_executable, owner, board):
         # 'id' auto increment
         self.created = created
         self.status = status
@@ -36,7 +35,6 @@ class Jobs(db.Model):
         self.filename_executable = filename_executable
         self.owner = owner
         self.board = board
-        self.microcontroller = microcontroller
 
     def __repr__(self):
         return '<job %i>' % self.id
@@ -54,7 +52,6 @@ class Jobs(db.Model):
                 'filename_other': self.filename_other,
                 'owner': self.owner,
                 'board': self.board,
-                'microcontroller': self.microcontroller,
             }
         else:
             return {

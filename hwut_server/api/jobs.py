@@ -3,8 +3,10 @@ from secrets import token_urlsafe
 from flask import Blueprint, jsonify, request, redirect, abort, send_file
 from datetime import datetime
 
+from sqlalchemy import and_
+
 from hwut_server.decorators import requires_authentication, check_authentication
-from hwut_server.models import Boards, Jobs, JobStatus, Microcontrollers
+from hwut_server.models import Boards, Jobs, JobStatus, Microcontrollers, Runners
 from hwut_server.database import db
 from hwut_server.utils import FILE_STORAGE
 
@@ -26,18 +28,12 @@ def submit():
     board = request.args.get('board')
     if board:
         try:
-            Boards.query.filter(Boards.name == board).one()
+            board = Boards.query.filter(Boards.name == board).one()
         except:
             return abort(400, 'board in unknown')
 
-    microcontroller = request.args.get('microcontroller')
-    if microcontroller is None:
-        return abort(400, 'microcontroller must be specified')
-    else:
-        try:
-            Microcontrollers.query.filter(Microcontrollers.name == microcontroller).one()
-        except:
-            return abort(400, 'microcontroller in unknown')
+    if Runners.query.filter(and_(Runners.target_board == board, Runners.enabled == True)).count() == 0:
+        return abort(400, 'no suitable runner available')
 
     filename_executable = token_urlsafe(32)
     size = request.content_length
@@ -55,8 +51,7 @@ def submit():
             duration_limit_seconds,
             filename_executable,
             user,
-            board,
-            microcontroller,
+            board.name,
         )
         if request.args.get('comment'):
             job.comment = request.args.get('comment')

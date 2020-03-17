@@ -18,10 +18,9 @@ class Runners(db.Model):
     busy = db.Column(db.Boolean, nullable=False)
     owner = db.Column(db.Text, db.ForeignKey('users.name'), nullable=False)
     target_board = db.Column(db.Text, db.ForeignKey('boards.name'), nullable=False)
-    target_microcontroller = db.Column(db.Text, db.ForeignKey('microcontrollers.name'), nullable=False)
     jobs = relationship("Jobs")
 
-    def __init__(self, owner, board, microcontroller, enabled=True):
+    def __init__(self, owner, board, enabled=True):
         self.token = token_urlsafe(32)
         self.enabled = enabled
         self.last_seen = None
@@ -30,7 +29,6 @@ class Runners(db.Model):
         self.busy = False
         self.owner = owner
         self.target_board = board
-        self.target_microcontroller = microcontroller
 
     def __repr__(self):
         return '<runner %d>' % self.id
@@ -47,7 +45,6 @@ class Runners(db.Model):
                 'job_counter': self.job_counter,
                 'busy': self.busy,
                 'board': self.target_board,
-                'microcontroller': self.target_microcontroller,
             }
         else:
             return {
