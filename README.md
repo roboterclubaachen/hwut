@@ -4,33 +4,19 @@ Webservice that executes STM32 Executables on real hardware (e.g. development bo
 
 ## Status
 
-Work in progress.
+The service on https://hwut.de/ is online.
+
+Some functions may be missing or unstable, a lot of work is currently being done on this project.
 
 ### Demo
 
-First start the daemon: `./server/run.py`
-
-Then you can submit a file to be executed: `curl -v -F 'executable=@/home/user/modm/build/stm32f4_discovery/blink/release/blink.elf' http://localhost:5000/apiv1/execute/stm32f407`
+Then you can submit a file to be executed: `curl -T example.elf -X PUT "https://hwut.de/apiv1/jobs/submit?board=nucleo-f303re&duration_limit_seconds=5"`
 
 ## HTTP API (v1)
 
-`POST /apiv1/execute/{target}`
-*{target}* ist the target MCU, e.g. *STM32F429ZIT*.
-
-`GET /apiv1/targets`
-List of supported targets.
-
-## Daemon configuration
-
-The configuration is stored in the SQL database and can be edited from the web interface: `/admin/configuration`.
+See [API documentation](docs/API.md)
 
 ## Concepts
-
-### Target
-
-A target is a microcontroller on a specific board that is available to run tests on.
-Any target can be identified by the board name and microcontroller.
-Boards may be available with different microcontrollers.
 
 ### Board
 
