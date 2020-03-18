@@ -42,17 +42,17 @@ def test_data():
     print('\tpassword: 123456')
     print('')
 
-    board = Boards('nucleo-f303re', manufacturer='STMicroelectronics')
-    db.session.add(board)
-    print('Board created: {}'.format(board.name))
-    print('')
-
     microcontroller = Microcontrollers('stm32f303re', manufacturer='STMicroelectronics')
     db.session.add(microcontroller)
     print('Microcontroller created: {}'.format(microcontroller.name))
     print('')
 
-    runner = Runners(user.name, board.name, microcontroller.name)
+    board = Boards('nucleo-f303re', 'stm32f303re', manufacturer='STMicroelectronics')
+    db.session.add(board)
+    print('Board created: {}'.format(board.name))
+    print('')
+
+    runner = Runners(user.name, board.name)
     runner.token = 'Uu51AhKNCbaiAci5CXmAm3vQepPG7zEoBJ5tpj81cd8'  # Don't do this at home!
     db.session.add(runner)
     db.session.commit()

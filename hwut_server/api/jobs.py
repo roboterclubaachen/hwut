@@ -4,9 +4,10 @@ from flask import Blueprint, jsonify, request, redirect, abort, send_file
 from datetime import datetime
 
 from sqlalchemy import and_
+from sqlalchemy.orm.exc import NoResultFound
 
 from hwut_server.decorators import requires_authentication, check_authentication
-from hwut_server.models import Boards, Jobs, JobStatus, Microcontrollers, Runners
+from hwut_server.models import Boards, Jobs, JobStatus, Runners
 from hwut_server.database import db
 from hwut_server.utils import FILE_STORAGE
 
@@ -64,7 +65,10 @@ def submit():
 
 @mod.route('/<int:id>', methods=['GET'])
 def get(id):
-    job = Jobs.query.filter(Jobs.id == id).one()
+    try:
+        job = Jobs.query.filter(Jobs.id == id).one()
+    except NoResultFound:
+        return abort(404, 'jobn does not exist')
     auth = request.authorization
     extended = (auth and ((check_authentication(auth.username, auth.password, superuser=True)) or (
             check_authentication(auth.username, auth.password) and auth.username == job.owner)))
@@ -131,7 +135,7 @@ def get_job_log(id):
         job = Jobs.query.filter(Jobs.id == id).one()
         if job.owner == auth.username:
             if job.status == JobStatus.FINISHED and job.filename_log:
-                send_file(
+                return send_file(
                     os.path.join(FILE_STORAGE, job.filename_log),
                     mimetype='text/plain',
                     attachment_filename='hwut_job_{}.log'.format(job.id)

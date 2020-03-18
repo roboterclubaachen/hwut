@@ -49,6 +49,8 @@ class Runners(db.Model):
         else:
             return {
                 'id': self.id,
+                'enabled': self.enabled,
+                'board': self.target_board,
             }
 
     def ping(self):

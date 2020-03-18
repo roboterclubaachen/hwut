@@ -9,20 +9,14 @@ from hwut_server.utils import extended_and_authorized
 mod = Blueprint('runners', __name__, url_prefix='/runners')
 
 
-@mod.route('/*', methods=['GET'], defaults={'filter_type': 'any', 'filter1': None, 'filter2': None})
-@mod.route('/<string:filter_type>/<string:filter1>', methods=['GET'], defaults={'filter2': None})
-@mod.route('/<string:filter_type>/<string:filter1>/<string:filter2>', methods=['GET'])
-def runners_list(filter_type, filter1, filter2):
+@mod.route('/*', methods=['GET'], defaults={'filter_type': '*', 'filter1': None})
+@mod.route('/by_board/<string:filter1>', methods=['GET'], defaults={'filter_type': 'by_board'})
+def runners_list(filter_type, filter1):
     runner_list = list()
-    if filter_type == 'any':
+    if filter_type == '*':
         runner_list = Runners.query.all()
-    elif (filter_type == 'by_board') and (filter1 is not None) and (filter2 is None):
+    elif (filter_type == 'by_board') and (filter1 is not None):
         runner_list = Runners.query.filter(Runners.target_board == filter1).all()
-    elif (filter_type == 'by_microcontroller') and (filter1 is not None) and (filter2 is None):
-        runner_list = Runners.query.filter(Runners.target_microcontroller == filter1).all()
-    elif (filter_type == 'by_board_and_microcontroller') and (filter1 is not None) and (filter2 is not None):
-        runner_list = Runners.query.filter(Runners.target_microcontroller == filter1) \
-            .filter(Runners.target_board == filter1).all()
     else:
         abort(400)
 
@@ -48,7 +42,7 @@ def targets_boards_get(id):
 @mod.route('/add', methods=['PUT'])
 @requires_authentication
 def runner_create():
-    if (request.args.get('board') is None) or (request.args.get('microcontroller') is None):
+    if request.args.get('board') is None:
         abort(400)
 
     user = request.authorization.username
@@ -57,14 +51,9 @@ def runner_create():
     except NoResultFound:
         abort(410, 'board "{}" does not exist'.format(request.args.get('board')))
         return
+
     try:
-        microcontroller = Microcontrollers.query \
-            .filter(Microcontrollers.name == request.args.get('microcontroller')).one()
-    except NoResultFound:
-        abort(410, 'microcontroller does not exist')
-        return
-    try:
-        runner = Runners(user, board.name, microcontroller.name)
+        runner = Runners(user, board.name)
         db.session.add(runner)
         db.session.commit()
     except:

@@ -11,25 +11,27 @@ class Boards(db.Model):
     runners = relationship("Runners")
     jobs = relationship("Jobs")
 
-    def __init__(self, name, manufacturer=None):
+    def __init__(self, name, microcontroller, manufacturer=None):
         self.name = name
+        self.microcontroller = microcontroller
         self.manufacturer = manufacturer
 
     def __repr__(self):
         return '<board %s>' % self.name
 
-    def to_dict_short(self):
-        return {
-            'name': self.name,
-        }
-
-    def to_dict_long(self):
-        return {
-            'name': self.name,
-            'microcontroller': self.microcontroller,
-            'manufacturer': self.manufacturer,
-            'runners': self.runners,
-        }
+    def to_dict(self, extended=False):
+        if extended:
+            return {
+                'name': self.name,
+                'microcontroller': self.microcontroller,
+                'manufacturer': self.manufacturer,
+                'runners': self.runners,
+            }
+        else:
+            return {
+                'name': self.name,
+                'microcontroller': self.microcontroller,
+            }
 
 
 class Microcontrollers(db.Model):
@@ -45,14 +47,13 @@ class Microcontrollers(db.Model):
     def __repr__(self):
         return '<microcontroller %s>' % self.name
 
-    def to_dict_short(self):
-        return {
-            'name': self.name,
-        }
-
-    def to_dict_long(self):
-        return {
-            'name': self.name,
-            'manufacturer': self.manufacturer,
-            'runners': self.runners,
-        }
+    def to_dict(self, extended=False):
+        if extended:
+            return {
+                'name': self.name,
+                'manufacturer': self.manufacturer,
+            }
+        else:
+            return {
+                'name': self.name,
+            }

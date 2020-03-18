@@ -17,8 +17,9 @@ def targets_boards():
 
 @mod.route('/boards/<string:board_name>', methods=['GET'])
 def targets_boards_get(board_name):
+    extended = extended_and_authorized(request)
     try:
-        return jsonify(Boards.query.filter(Boards.name == board_name).one().to_dict_long())
+        return jsonify(Boards.query.filter(Boards.name == board_name).one().to_dict(extended=extended))
     except:
         abort(404)
 
@@ -26,8 +27,11 @@ def targets_boards_get(board_name):
 @mod.route('/boards/<string:board_name>', methods=['PUT'])
 @requires_authentication
 def targets_boards_create(board_name):
-    board = Boards(board_name)
+    microcontroller = request.args.get('microcontroller')
+    if Microcontrollers.query.filter(Microcontrollers.name == microcontroller).count() != 1:
+        return abort(400, 'Microcontroller not found. Please create the microcontroller first.')
     manufacturer = request.args.get('manufacturer')
+    board = Boards(board_name, microcontroller)
     if manufacturer:
         board.manufacturer = manufacturer
     try:
@@ -61,8 +65,8 @@ def targets_microcontrollers():
 @mod.route('/microcontrollers/<string:microcontroller_name>', methods=['GET'])
 def targets_microcontrollers_get(microcontroller_name):
     try:
-        return jsonify(Microcontrollers.query.filter(Microcontrollers.name == microcontroller_name)
-                       .one().to_dict_long())
+        return jsonify(
+            Microcontrollers.query.filter(Microcontrollers.name == microcontroller_name).one().to_dict(extended=True))
     except:
         abort(404)
 
